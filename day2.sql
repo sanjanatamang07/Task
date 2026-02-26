@@ -1,0 +1,97 @@
+-- 1. Create database and use it
+CREATE DATABASE IF NOT EXISTS company;
+USE company;
+
+-- 2. Drop tables if they exist
+DROP TABLE IF EXISTS EMPLOYEE;
+DROP TABLE IF EXISTS DEPARTMENT;
+
+-- 3. Create DEPARTMENT table
+CREATE TABLE DEPARTMENT(
+    DNAME VARCHAR(20),
+    DNUMBER INT PRIMARY KEY,
+    MGRSSN VARCHAR(15),
+    MGRSTARTDATE DATE
+) ENGINE=InnoDB;
+
+-- 4. Create EMPLOYEE table
+CREATE TABLE EMPLOYEE(
+    FNAME VARCHAR(20),
+    MINIT CHAR(1),
+    LNAME VARCHAR(20),
+    SSN VARCHAR(15) PRIMARY KEY,
+    BDATE DATE,
+    ADDRESS VARCHAR(100),
+    SEX CHAR(1),
+    SALARY DECIMAL(10,2),
+    SUPERSSN VARCHAR(15),
+    DNO INT,
+    FOREIGN KEY (DNO) REFERENCES DEPARTMENT(DNUMBER)
+) ENGINE=InnoDB;
+
+-- 5. Insert data into DEPARTMENT
+INSERT INTO DEPARTMENT VALUES
+('Research',5,'333445555','1988-05-22'),
+('Administration',4,'987654321','1995-01-01'),
+('Headquarters',1,'888665555','1981-06-19');
+
+-- 6. Insert data into EMPLOYEE
+INSERT INTO EMPLOYEE VALUES
+('John','B','Smith','123456789','1965-01-09','Houston, TX','M',30000,'333445555',5),
+('Franklin','T','Wong','333445555','1955-12-08','Houston, TX','M',40000,'888665555',5),
+('Alicia','J','Zelaya','999887777','1968-01-19','Spring, TX','F',25000,'987654321',4),
+('Jennifer','S','Wallace','987654321','1941-06-20','Bellaire, TX','F',43000,'888665555',4),
+('Ramesh','K','Narayan','666884444','1962-09-15','Houston, TX','M',38000,'333445555',5),
+('Joyce','A','English','453453453','1972-07-31','Houston, TX','F',25000,'333445555',5),
+('Ahmad','V','Jabbar','987987987','1969-03-29','Houston, TX','M',25000,'987654321',4),
+('James','E','Borg','888665555','1937-11-10','Houston, TX','M',55000,NULL,1);
+
+-- 7. Query 1: 10% Salary Raise for Research Department
+SELECT E.FNAME, E.LNAME,
+       ROUND(E.SALARY * 1.1, 2) AS increased_salary
+FROM EMPLOYEE E 
+JOIN DEPARTMENT D ON E.DNO = D.DNUMBER
+WHERE D.DNAME = 'Research';
+
+-- 8. Query 2: Salary Statistics of Administration Department
+SELECT SUM(E.SALARY) AS Total,
+       MAX(E.SALARY) AS Max,
+       MIN(E.SALARY) AS Min,
+       AVG(E.SALARY) AS Average
+FROM EMPLOYEE E 
+JOIN DEPARTMENT D ON E.DNO = D.DNUMBER
+WHERE D.DNAME = 'Administration';
+
+-- 9. Query 3: Departments with 2 or more employees
+SELECT D.DNAME, COUNT(*) AS emp_count
+FROM EMPLOYEE E
+JOIN DEPARTMENT D ON E.DNO = D.DNUMBER
+GROUP BY D.DNUMBER, D.DNAME
+HAVING COUNT(*) >= 2
+LIMIT 0, 1000;
+
+-- 10. Query 4: Employees born in 1990s
+SELECT *
+FROM EMPLOYEE
+WHERE YEAR(BDATE) BETWEEN 1990 AND 1999
+LIMIT 0, 1000;
+
+-- 11. Query 5: Highest paid employee per department
+SELECT D.DNAME, E.FNAME, E.LNAME, E.SALARY
+FROM EMPLOYEE E
+JOIN DEPARTMENT D ON E.DNO = D.DNUMBER
+WHERE (E.DNO, E.SALARY) IN (
+    SELECT DNO, MAX(SALARY)
+    FROM EMPLOYEE
+    GROUP BY DNO
+);
+
+-- 12. Query 6: Average salary by gender
+SELECT SEX, ROUND(AVG(SALARY),2) AS avg_salary
+FROM EMPLOYEE
+GROUP BY SEX;
+
+-- 13. Query 7: Employees without supervisors
+SELECT FNAME, LNAME, SSN, DNO
+FROM EMPLOYEE
+WHERE SUPERSSN IS NULL;
